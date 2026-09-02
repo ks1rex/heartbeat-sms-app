@@ -18,6 +18,19 @@
         android:gravity="top"
         android:inputType="textMultiLine" />
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Пауза между отправками, мс:" />
+
+    <EditText
+        android:id="@+id/delayEdit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="number"
+        android:hint="2500" />
+
     <Button
         android:id="@+id/saveButton"
         android:layout_width="match_parent"

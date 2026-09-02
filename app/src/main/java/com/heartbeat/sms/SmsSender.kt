@@ -10,7 +10,8 @@ object SmsSender {
     private const val PREFS = "heartbeat_prefs"
     private const val KEY_NUMBERS = "numbers"
     private const val KEY_LAST_SENT = "last_sent"
-    private const val DELAY_MS = 2500L // ponytail: fixed pacing, add backoff-on-failure if carrier throttling shows up
+    private const val KEY_DELAY_MS = "delay_ms"
+    private const val DEFAULT_DELAY_MS = 2500L
 
     fun getNumbers(context: Context): List<String> {
         val raw = prefs(context).getString(KEY_NUMBERS, "") ?: ""
@@ -21,11 +22,18 @@ object SmsSender {
         prefs(context).edit().putString(KEY_NUMBERS, text).apply()
     }
 
+    fun getDelayMs(context: Context): Long = prefs(context).getLong(KEY_DELAY_MS, DEFAULT_DELAY_MS)
+
+    fun saveDelayMs(context: Context, delayMs: Long) {
+        prefs(context).edit().putLong(KEY_DELAY_MS, delayMs).apply()
+    }
+
     fun lastSent(context: Context): Long = prefs(context).getLong(KEY_LAST_SENT, 0L)
 
     /** Blocking — call from a background thread only. */
     fun sendHeartbeatBlocking(context: Context, onProgress: (String) -> Unit = {}) {
         val numbers = getNumbers(context)
+        val delayMs = getDelayMs(context)
         val smsManager = context.getSystemService(SmsManager::class.java)
         val text = "heartbeat ${System.currentTimeMillis()}"
         for (number in numbers) {
@@ -35,7 +43,7 @@ object SmsSender {
             } catch (e: Exception) {
                 onProgress("FAIL: $number (${e.message})")
             }
-            Thread.sleep(DELAY_MS)
+            Thread.sleep(delayMs)
         }
         prefs(context).edit().putLong(KEY_LAST_SENT, System.currentTimeMillis()).apply()
     }
